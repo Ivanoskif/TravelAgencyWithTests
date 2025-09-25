@@ -1,0 +1,133 @@
+﻿@model IEnumerable<TravelAgency.Domain.Models.Destination>
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<TravelAgency.Repository.Data.ApplicationUser> SignInManager
+@inject UserManager<TravelAgency.Repository.Data.ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Destinations";
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .card-elevated {
+        border: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+
+    .search-input {
+        max-width: 320px;
+    }
+
+    .table thead th {
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card card-elevated">
+        <div class="card-body">
+            <div class="page-header mb-3">
+                <div>
+                    <h1 class="h3 fw-semibold mb-1">Destinations</h1>
+                    <p class="text-secondary mb-0">Cities and countries available for travel packages.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <form method="get" asp-action="Index" class="d-flex gap-2">
+                        <input name="q" value="@Context.Request.Query["q"]" class="form-control search-input" placeholder="Search by city, country, or ISO code..." aria-label="Search" />
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                    </form>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Create" class="btn btn-primary"><span class="me-1">＋</span>Create New</a>
+                    }
+                </div>
+            </div>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <form asp-action="Import" method="post" class="mb-3 d-flex gap-2">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">Import from API</button>
+                    <a asp-action="Create" class="btn btn-outline-primary">Add manually</a>
+                </form>
+            }
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert alert-info">@TempData["Message"]</div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Country</th>
+                            <th>City</th>
+                            <th class="text-end">Latitude</th>
+                            <th class="text-end">Longitude</th>
+                            <th>ISO</th>
+                            <th>Currency</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-secondary">No destinations found.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                var mapsUrl = $"https://www.google.com/maps?q={item.City},{item.CountryName}";
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.CountryName</div>
+                                        <div class="small text-secondary">@item.IsoCode</div>
+                                    </td>
+                                    <td class="fw-semibold">@item.City</td>
+                                    <td class="text-end">@item.Latitude</td>
+                                    <td class="text-end">@item.Longitude</td>
+                                    <td>
+                                        <span class="badge bg-light text-secondary">@item.IsoCode</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@item.DefaultCurrency</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end flex-wrap gap-2">
+                                            <a href="@mapsUrl" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">📍 Map</a>
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-secondary small">@Model?.Count() ?? 0 destination(s)</div>
+            </div>
+        </div>
+    </div>
+</div>

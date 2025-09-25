@@ -1,0 +1,90 @@
+﻿@model IEnumerable<TravelAgency.Domain.Models.Booking>
+@using System.Globalization
+@using TravelAgency.Domain.Models
+
+@{
+    ViewData["Title"] = "My Bookings";
+    var ci = new CultureInfo("en-US");
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .card-elevated {
+        border: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+
+    .table thead th {
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card card-elevated">
+        <div class="card-body">
+            <div class="page-header mb-3">
+                <div>
+                    <h1 class="h3 fw-semibold mb-1">My bookings</h1>
+                    <p class="text-secondary mb-0">Only reservations made with your account.</p>
+                </div>
+                <div>
+                    <a class="btn btn-outline-secondary" asp-controller="Packages" asp-action="Index">← Browse packages</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Package</th>
+                            <th class="text-center">People</th>
+                            <th class="text-end">Total (base)</th>
+                            <th>Created (UTC)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-secondary">You have no bookings yet.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in Model)
+                            {
+                                string badgeClass = "badge bg-secondary";
+                                if (item.Status == BookingStatus.Confirmed.ToString()) badgeClass = "badge bg-success";
+                                else if (item.Status == BookingStatus.Pending.ToString()) badgeClass = "badge bg-warning text-dark";
+                                else if (item.Status == BookingStatus.Cancelled.ToString()) badgeClass = "badge bg-danger";
+
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.Package?.Title</div>
+                                        <div class="small text-secondary text-truncate" style="max-width:380px;">@item.Package?.Description</div>
+                                    </td>
+                                    <td class="text-center">@item.PeopleCount</td>
+                                    <td class="text-end">@item.TotalBasePrice.ToString("C", ci)</td>
+                                    <td>@item.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td><span class="@badgeClass">@item.Status</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

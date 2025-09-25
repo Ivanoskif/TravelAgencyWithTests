@@ -1,0 +1,136 @@
+﻿@model IEnumerable<TravelAgency.Domain.Models.Booking>
+@using System.Globalization
+@using TravelAgency.Domain.Models
+
+@{
+    ViewData["Title"] = "Bookings";
+    var ci = CultureInfo.CurrentCulture;
+    var statusQ = Context.Request.Query["status"].ToString();
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .card-elevated {
+        border: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+
+    .search-input {
+        max-width: 320px;
+    }
+
+    .table thead th {
+        white-space: nowrap;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card card-elevated">
+        <div class="card-body">
+
+            <div class="page-header mb-3">
+                <div>
+                    <h1 class="h3 fw-semibold mb-1">Bookings</h1>
+                    <p class="text-secondary mb-0">Manage customer reservations across all packages.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <form method="get" asp-action="Index" class="d-flex gap-2">
+                        <input name="q"
+                               value="@Context.Request.Query["q"]"
+                               class="form-control search-input"
+                               placeholder="Search by package or customer email..."
+                               aria-label="Search" />
+                        <select name="status" class="form-select">
+                            <option value="">All statuses</option>
+                            <option value="Pending" selected="@(statusQ == "Pending" ? "selected" : null)">Pending</option>
+                            <option value="Confirmed" selected="@(statusQ == "Confirmed" ? "selected" : null)">Confirmed</option>
+                            <option value="Cancelled" selected="@(statusQ == "Cancelled" ? "selected" : null)">Cancelled</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="submit">Filter</button>
+                    </form>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Create" class="btn btn-primary"><span class="me-1">＋</span>Create New</a>
+                    }
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Package</th>
+                            <th>Customer</th>
+                            <th class="text-center">People</th>
+                            <th class="text-end">Total (base)</th>
+                            <th>Created (UTC)</th>
+                            <th>Status</th>
+                            <th class="text-end" style="width: 220px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-secondary">No bookings found.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var item in Model)
+                            {
+                                string badgeClass = "badge bg-secondary";
+                                if (item.Status == BookingStatus.Confirmed.ToString())
+                                    badgeClass = "badge bg-success";
+                                else if (item.Status == BookingStatus.Pending.ToString())
+                                    badgeClass = "badge bg-warning text-dark";
+                                else if (item.Status == BookingStatus.Cancelled.ToString())
+                                    badgeClass = "badge bg-danger";
+
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.Package?.Title</div>
+                                        <div class="small text-secondary text-truncate" style="max-width:380px;">
+                                            @item.Package?.Description
+                                        </div>
+                                    </td>
+                                    <td>@item.Customer?.Email</td>
+                                    <td class="text-center">@item.PeopleCount</td>
+                                    <td class="text-end">@item.TotalBasePrice.ToString("C", ci)</td>
+                                    <td>@item.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td><span class="@badgeClass">@item.Status.ToString()</span></td>
+                                    <td class="text-end" style="width:220px;">
+                                        <div class="d-flex justify-content-end flex-wrap gap-2">
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div class="text-secondary small">@Model?.Count() ?? 0 booking(s)</div>
+            </div>
+
+        </div>
+    </div>
+</div>

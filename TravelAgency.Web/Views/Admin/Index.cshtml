@@ -1,0 +1,130 @@
+﻿@using System.Globalization
+@{
+    ViewData["Title"] = "Admin • Roles";
+    var email = (string)(ViewBag.Email ?? "");
+    var ok = TempData["Ok"] as string;
+    var err = TempData["Err"] as string;
+    var foundEmail = TempData["Email"] as string;
+    var userId = TempData["UserId"] as string;
+    var roles = TempData["Roles"] as string; // comma-separated maybe
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .card-elevated {
+        border: 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="page-header mb-3">
+        <div>
+            <h1 class="h3 fw-semibold mb-1">Role management</h1>
+            <p class="text-secondary mb-0">Find a user and add or remove roles.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ok))
+    {
+        <div class="alert alert-success">@ok</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(err))
+    {
+        <div class="alert alert-danger">@err</div>
+    }
+
+    <div class="card card-elevated mb-4">
+        <div class="card-body">
+            <form asp-action="Find" method="post" class="row gy-2 gx-2 align-items-end">
+                @Html.AntiForgeryToken()
+                <div class="col-sm-6 col-md-5">
+                    <label for="email" class="form-label">Email</label>
+                    <input id="email" class="form-control" type="email" name="email" placeholder="user@domain.com" value="@email" required />
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit">Find user</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(foundEmail))
+    {
+        <div class="card card-elevated" style="max-width: 720px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                    <div>
+                        <h2 class="h5 mb-1">@foundEmail</h2>
+                        <div class="text-secondary small">UserId: <span class="text-body">@userId</span></div>
+                    </div>
+                    <div>
+                        <a asp-action="Find" class="btn btn-light">Clear</a>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-secondary small">Current roles</div>
+                    @if (string.IsNullOrWhiteSpace(roles))
+                    {
+                        <div class="badge bg-light text-secondary">(none)</div>
+                    }
+                    else
+                    {
+                        var split = roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        foreach (var r in split)
+                        {
+                            <span class="badge bg-secondary me-1">@r</span>
+                        }
+                    }
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0" style="background: #f8fafc;">
+                            <div class="card-body">
+                                <h3 class="h6 mb-3">Add role</h3>
+                                <form asp-action="AddRole" method="post" class="d-grid gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="email" value="@foundEmail" />
+                                    <select name="role" class="form-select">
+                                        <option value="Agent">Agent</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Customer">Customer</option>
+                                    </select>
+                                    <button class="btn btn-success" type="submit">Add role</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0" style="background: #fff5f5;">
+                            <div class="card-body">
+                                <h3 class="h6 mb-3">Remove role</h3>
+                                <form asp-action="RemoveRole" method="post" class="d-grid gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="email" value="@foundEmail" />
+                                    <select name="role" class="form-select">
+                                        <option value="Agent">Agent</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Customer">Customer</option>
+                                    </select>
+                                    <button class="btn btn-danger" type="submit">Remove role</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="small text-secondary mt-3">Tip: Keep <strong>Admin</strong> minimal. Use <strong>Agent</strong> for operational tasks and <strong>Customer</strong> for end users.</div>
+            </div>
+        </div>
+    }
+</div>

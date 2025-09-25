@@ -1,0 +1,55 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using TravelAgency.Repository.Data
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var isAdmin = User.IsInRole("Admin");
+    var userName = User?.Identity?.Name ?? "";
+}
+
+
+<ul class="navbar-nav ms-auto align-items-center">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item me-2">
+            <a class="nav-link" asp-controller="Cart" asp-action="Index" title="Cart">🛒 Cart</a>
+        </li>
+
+
+        @* User dropdown *@
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Hello @userName!
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                <li>
+                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Manage account</a>
+                </li>
+                @if (isAdmin)
+                {
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="AdminRoles" asp-action="Index">Admin: Roles</a>
+                    </li>
+                }
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                    <form asp-area="Identity" asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Packages")" method="post" class="px-3">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-link p-0">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+    }
+</ul>
